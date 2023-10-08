@@ -5,6 +5,8 @@ import { signin } from './signin';
 import { validateRequest } from '../../middlewares/validateRequest';
 import { resetPassword } from './resetPassword';
 import { forgotPassword } from './forgotPassword';
+import { verifyToken } from '../../middlewares/verifyToken';
+import { changePassword } from './changePassword';
 
 
 const authRouter = express.Router()
@@ -27,5 +29,7 @@ authRouter.post(
     resetPassword,
     respond
   )
+
+  authRouter.put('/changePassword', verifyToken, changePassword, respond)
 
 export default authRouter

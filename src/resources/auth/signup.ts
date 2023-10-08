@@ -136,7 +136,6 @@ const createUser = async (
       OTP: OTPGenerated,
       type: 'OTP'
     })
-    console.log("After otp when creating a user sending mail and everyting....")
 
     return _.pick(newUser, ['email', 'firstName', 'lastName']);
   } catch (error) {
