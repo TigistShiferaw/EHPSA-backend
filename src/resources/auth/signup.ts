@@ -8,6 +8,7 @@ export const signUp = async (
   req: Request,
   res: Response,
 ) => {
+  console.log('req.body', req.body);
   try {
     const { email, phoneNumber, password, firstName, lastName, membershipType, volunteeringInterest, university, studentIdURL,  dateOfBirth, profilePicture, resume, relevantDocuments } = req.body;
     console.log('email', email);
@@ -103,6 +104,7 @@ const createUser = async (
 ) => {
   try {
     const hashedPassword = await encrypt(password);
+    console.log('hashedPassword', hashedPassword);
     const newUser = await User.create({
       email,
       password: hashedPassword,

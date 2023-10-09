@@ -10,6 +10,9 @@ import authRouter from './resources/auth/auth.routes'
 import http from 'http';
 import { Server as SocketIoServer } from 'socket.io';
 import GroupRouter from './resources/community/groups/group.routes'
+import userRouter from './resources/user/user.routes'
+// import { authenticate } from './middlewares/authMiddleware'
+// import { addUserToRequest } from './middlewares/userRequest'
 
 export const app = express()
 
@@ -34,10 +37,12 @@ app.use(bodyParser.json({ limit: '50mb' }))
 
 app.use(urlencoded({ extended: true, limit: '50mb' }))
 app.use(morgan('dev'))
+// app.use(authenticate);
 
 app.use('/api/v1/', donateRouter);
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/community', GroupRouter )
+app.use('/api/v1/user', userRouter )
 
 export const start = async () => {
   try {
