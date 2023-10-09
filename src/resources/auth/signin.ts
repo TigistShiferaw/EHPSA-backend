@@ -36,6 +36,17 @@ export const signin = async (
         return next()
         }
 
+        if (!user.isVerified) {
+            res.locals.json = {
+              statusCode: 401,
+              message: 'User is not verified'
+            }
+            return next()
+          }
+      
+
+
+
         const token = JWT.sign({ _id: user._id }, process.env.ACCESS_TOKEN_SECRET as Secret)
         console.log('token', token);
         res.locals.json = {

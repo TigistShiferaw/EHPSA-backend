@@ -31,6 +31,8 @@
     "@types/bcrypt": "^5.0.0",
     "@types/joi": "^17.2.3",
     "@types/jsonwebtoken": "^9.0.3",
+    "@types/nodemailer": "^6.4.11",
+    "@types/otp-generator": "^4.0.0",
     "@types/socket.io": "^3.0.2",
     "axios": "^1.5.0",
     "bcrypt": "^5.1.1",

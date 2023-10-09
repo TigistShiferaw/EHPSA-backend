@@ -3,6 +3,9 @@ import * as Joi from 'joi';
 import { User } from '../../resources/user/user.model';
 import { encrypt } from '../../helpers/encryptPassword';
 import _ from 'lodash';
+import { generateOTP } from '../../helpers/otp';
+import { OTP } from '../OTP/otp.model';
+import { sendMail } from '../../helpers/mail';
 
 export const signUp = async (
   req: Request,
@@ -51,6 +54,7 @@ export const signUp = async (
     return res.status(400).json({ message: error });
   }
 };
+
 
 function validateInput(user: any) {
   const schema = Joi.object({
@@ -104,7 +108,8 @@ const createUser = async (
 ) => {
   try {
     const hashedPassword = await encrypt(password);
-    console.log('hashedPassword', hashedPassword);
+
+    const OTPGenerated = generateOTP(6)
     const newUser = await User.create({
       email,
       password: hashedPassword,
@@ -120,9 +125,76 @@ const createUser = async (
       resume,
       relevantDocuments,
     });
+    
+    const otp = await OTP.create({
+      email: email,
+      otpCode: OTPGenerated
+    })
+
+    
+    const info = await sendMail({
+      to: email,
+      OTP: OTPGenerated,
+      type: 'OTP'
+    })
+    console.log("After otp when creating a user sending mail and everyting....")
+
     return _.pick(newUser, ['email', 'firstName', 'lastName']);
   } catch (error) {
     console.log('Error creating user:', error);
     throw new Error('Error creating user');
   }
 };
+
+export const verifyEmail = async (req: Request, res: Response) => {
+  const { email, otp } = req.body;
+  const checkUser = await User.findOne({ email: email });
+
+  if (!checkUser) {
+    return res.status(400).json({
+      statusCode: 400,
+      message: 'Wrong verification code'
+    });
+  }
+
+  if (checkUser.isVerified) {
+    return res.status(400).json({
+      statusCode: 400,
+      message: 'User is already verified'
+    });
+  }
+
+  const user = await validateUser(email, otp);
+
+  if (!user) {
+    return res.status(400).json({
+      statusCode: 400,
+      message: 'Wrong verification code'
+    });
+  }
+
+  return res.status(200).json({
+    statusCode: 200,
+    message: 'Account successfully verified'
+  });
+};
+
+const validateUser = async (email: String, otp: String) => {
+  try {
+    const user = await User.findOne({ email })
+    if (!user) {
+      return false
+    }
+    const userOtp = await OTP.findOne({ email })
+    if (userOtp?.otpCode !== otp) {
+      return false
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(user._id, {
+      $set: { isVerified: true }
+    })
+    return updatedUser
+  } catch (error) {
+    return false
+  }
+}

@@ -1,14 +1,15 @@
-import mongoose, { Schema } from 'mongoose';
 
+import { boolean } from 'joi';
+import mongoose, { Schema } from 'mongoose'
 
 export interface IUserInterface {
-    _id: any;
-    // remove(): void;
-    email: string;
-    password: string;
-    firstName: string;
-    lastName: string;
-    studentIdURL: string | null; // required if membership type is student
+     _id: any;
+    email: String;
+    isVerified : boolean;
+    password: String;
+    firstName: String;
+    lastName: String;
+    studentIdURL: String | null; // required if membership type is student
     university: string | null; // required if membership type is student
     membershipType: 'student' | 'associate' | 'professional' | null;
     volunteeringInterest: boolean;
@@ -24,6 +25,11 @@ export interface IUserInterface {
 const userSchema: Schema<IUserInterface> = new mongoose.Schema({
     email: {
         type: String,
+    },
+
+    isVerified : {
+        type: Boolean,
+        default: false
     },
 
     password: {
