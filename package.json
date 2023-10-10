@@ -30,6 +30,7 @@
   "dependencies": {
     "@types/bcrypt": "^5.0.0",
     "@types/joi": "^17.2.3",
+    "@types/joi-password-complexity": "^4.2.2",
     "@types/jsonwebtoken": "^9.0.3",
     "@types/nodemailer": "^6.4.11",
     "@types/otp-generator": "^4.0.0",
