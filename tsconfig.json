@@ -9,5 +9,13 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
-  }
+  },"include": [
+    "src/**/*.ts"
+, "types.d.ts"    ],
+  "exclude": [
+    "node_modules"
+  ],
+  "files":["types.d.ts"]
 }
+  
+
