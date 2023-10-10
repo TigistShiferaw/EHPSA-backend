@@ -8,12 +8,12 @@ import {
   deleteEvent,
 } from '../events/event.controller';
 
-const router = express.Router();
+const eventRouter = express.Router();
 
-router.post('/events', createEvent,respond);
-router.get('/events', getAllEvents,respond);
-router.get('/events/:id', getEventById,respond);
-router.put('/events/:id', updateEvent,respond);
-router.delete('/events/:id', deleteEvent,respond);
+eventRouter.post('/addEvents', createEvent,respond);
+eventRouter.get('/getEvents', getAllEvents);
+eventRouter.get('/getEventsById/:id', getEventById,respond);
+eventRouter.put('/editEvents/:id', updateEvent,respond);
+eventRouter.delete('/deleteEvents/:id', deleteEvent,respond);
 
-export default router;
+export default eventRouter;
