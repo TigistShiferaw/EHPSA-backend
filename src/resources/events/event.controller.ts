@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import Event, { IEvent } from '../events/event.model';
+import Event from '../events/event.model';
 
 export const createEvent = async (req: Request, res: Response) => {
   try {
@@ -10,10 +10,9 @@ export const createEvent = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Bad request' });
     }
     const savedEvent = await event.save();
-    console.log(savedEvent)
     res.status(201).json(savedEvent);
   } catch (error) {
-    res.status(500).json({ error: 'Could not create event' });
+    res.status(500).json({ error: 'Could not create event ' + error });
   }
 };
 
