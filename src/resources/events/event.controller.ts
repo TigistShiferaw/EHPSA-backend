@@ -5,7 +5,6 @@ export const createEvent = async (req: Request, res: Response) => {
   try {
    
     const event = new Event(req.body);
-    // console.log(event.title + "\n " + event.description + "\n " + event.image + "\n " + event.location + "\n " + event.time)
     if (!event) {
       return res.status(400).json({ error: 'Bad request' });
     }
