@@ -10,6 +10,7 @@ import authRouter from './resources/auth/auth.routes'
 import http from 'http';
 import { Server as SocketIoServer } from 'socket.io';
 import GroupRouter from './resources/community/groups/group.routes'
+import eventRouter from '../src/resources/events/event.router'
 import userRouter from './resources/user/user.routes'
 // import { authenticate } from './middlewares/authMiddleware'
 // import { addUserToRequest } from './middlewares/userRequest'
@@ -42,7 +43,9 @@ app.use(morgan('dev'))
 app.use('/api/v1/', donateRouter);
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/community', GroupRouter )
+app.use('/api/v1/events', eventRouter)
 app.use('/api/v1/user', userRouter )
+
 
 export const start = async () => {
   try {
