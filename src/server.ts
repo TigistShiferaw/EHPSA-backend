@@ -10,7 +10,7 @@ import authRouter from './resources/auth/auth.routes'
 import http from 'http';
 import { Server as SocketIoServer } from 'socket.io';
 import GroupRouter from './resources/community/groups/group.routes'
-import eventRouter from '../src/resources/events/event.router'
+import eventRouter from './resources/events/event.router'
 import userRouter from './resources/user/user.routes'
 // import { authenticate } from './middlewares/authMiddleware'
 // import { addUserToRequest } from './middlewares/userRequest'
