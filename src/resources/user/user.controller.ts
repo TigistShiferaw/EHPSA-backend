@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { User, IUserInterface } from '../../resources/user/user.model';
 import { encrypt } from '../../helpers/encryptPassword';
 import _ from 'lodash';
-import { Types } from 'mongoose';
+import cloudinary from "../../config/cloudinary";
 
 interface RequestWithUser extends Request {
   user: IUserInterface;
@@ -67,51 +67,36 @@ export class UserController {
 
   public async updateUser(req: RequestWithUser, res: Response): Promise<Response<any>> {
     try {
-      const { id } = req.params;
-      const { email, password, firstName, lastName, role } = req.body;
-      const user = await User.findById(id);
-      if (!user) {
-        return res.status(404).json({
-          statusCode: 404,
-          message: 'User not found',
-        });
-      }
-      if (req.user.role !== 'superadmin' && role  && req.user._id.toString() !== user._id.toString()) {
-        return res.status(403).send('Forbidden');
-      }
-      if (email && email !== user.email) {
-        const emailExists = await User.findOne({ email });
-        if (emailExists) {
-          return res.status(400).json({
-            statusCode: 400,
-            message: 'Email already exists',
-          });
+        const id = req.params.id;
+        const user = await User.findById(id);
+
+        if (!user) {
+            return res.status(404).json('User not found');
         }
-        user.email = email;
-      }
-      if (password) {
-        const hashedPassword = await encrypt(password);
-        user.password = hashedPassword;
-      }
-      if (firstName) {
-        user.firstName = firstName;
-      }
-      if (lastName) {
-        user.lastName = lastName;
-      }
-      if (role) {
-        user.role = role;
-      }
-      await user.save();
-      return res.status(200).json({
-        statusCode: 200,
-        data: _.pick(user, ['email', 'firstName', 'lastName', 'role']),
-      });
+
+        if (req.file) {
+            const cloudinaryImage = await cloudinary.uploader.upload(req.file.path, {
+                folder: '/EHPSA/Images',
+                use_filename: true,
+            });
+            user.profilePicture = cloudinaryImage?.secure_url;
+        }
+        for (const key in req.body) {
+          (user as any)[key] = req.body[key];
+        }
+
+        const updatedUser = await user.save();
+
+        if (!updatedUser) {
+            return res.status(404).json('User not found after update');
+        }
+
+        return res.status(200).json(updatedUser);
     } catch (error) {
-      console.error('Error updating user:', error);
-      return res.status(400).json({ message: error });
+        console.error(error);
+        return res.status(500).json('Something went wrong');
     }
-  }
+}
   public async deleteUser(req: RequestWithUser, res: Response): Promise<Response<any>> {
     try {
       const { id } = req.params;

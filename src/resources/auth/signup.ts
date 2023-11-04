@@ -11,10 +11,26 @@ export const signUp = async (
   req: Request,
   res: Response,
 ) => {
-  console.log('req.body', req.body);
   try {
-    const { email, phoneNumber, password, firstName, lastName, membershipType, volunteeringInterest, university, studentIdURL,  dateOfBirth, profilePicture, resume, relevantDocuments } = req.body;
-    console.log('email', email);
+    const {
+      email,
+      password,
+      firstName,
+      lastName,
+      studentIdURL,
+      university,
+      membershipType,
+      membershipStartDate,
+      membershipExpireDate,
+      membershipDescription,
+      volunteeringInterest,
+      phoneNumber,
+      dateOfBirth,
+      profilePicture,
+      resume,
+      relevantDocuments,
+    } = req.body;
+
     const emailExists = await User.findOne({ email });
     if (emailExists) {
       return res.status(400).json({
@@ -22,21 +38,26 @@ export const signUp = async (
         message: 'Email already exists',
       });
     }
+
     const user = {
       email,
       password,
       firstName,
       lastName,
-      membershipType,
-      volunteeringInterest,
-      university,
       studentIdURL,
+      university,
+      membershipType,
+      membershipStartDate,
+      membershipExpireDate,
+      membershipDescription,
+      volunteeringInterest,
       phoneNumber,
       dateOfBirth,
       profilePicture,
       resume,
       relevantDocuments,
     };
+
     const result = validateInput(user);
     if (result.error) {
       return res.status(400).json({
@@ -44,17 +65,17 @@ export const signUp = async (
         message: result.error.details[0].message,
       });
     }
-    const newUser = await createUser(email, password, firstName, lastName, membershipType, volunteeringInterest, university, studentIdURL,  phoneNumber, dateOfBirth, profilePicture, resume, relevantDocuments);
+
+    const newUser = await createUser(user);
     return res.status(201).json({
       statusCode: 201,
       data: newUser,
     });
-  } catch (error) {
+  } catch (error:any) {
     console.error('Error creating user:', error);
-    return res.status(400).json({ message: error });
+    return res.status(400).json({ message: error.message });
   }
 };
-
 
 function validateInput(user: any) {
   const schema = Joi.object({
@@ -62,15 +83,15 @@ function validateInput(user: any) {
     password: Joi.string().min(8).max(255).required(),
     firstName: Joi.string().required(),
     lastName: Joi.string().required(),
-    volunteeringInterest: Joi.boolean().required(),
-    membershipType: Joi.when('volunteeringInterest', {
+    volunteeringInterest: Joi.boolean().optional(),
+    membershipType: Joi.required().when('volunteeringInterest', {
       is: true,
       then: Joi.string().valid('student', 'associate', 'professional').allow(null),
-      otherwise: Joi.string().valid('student', 'associate', 'professional').required(),
+      otherwise: Joi.string().valid('student', 'associate', 'professional').optional(),
     }),
-    phoneNumber: Joi.string().required(),
-    dateOfBirth: Joi.date().required(),
-    profilePicture: Joi.string().required(),
+    phoneNumber: Joi.string().optional(),
+    dateOfBirth: Joi.date().optional(),
+    profilePicture: Joi.string().optional(),
     resume: Joi.when('volunteeringInterest', {
       is: true,
       then: Joi.string().required(),
@@ -79,7 +100,7 @@ function validateInput(user: any) {
     relevantDocuments: Joi.array().items(Joi.string()).allow(null),
     studentIdURL: Joi.when('membershipType', {
       is: 'student',
-      then: Joi.string().required(),
+      then: Joi.string().optional(),
       otherwise: Joi.string().allow(null),
     }),
     university: Joi.when('membershipType', {
@@ -87,56 +108,32 @@ function validateInput(user: any) {
       then: Joi.string().required(),
       otherwise: Joi.string().allow(null),
     }),
+    membershipStartDate: Joi.date().allow(null).optional(),
+    membershipExpireDate: Joi.date().allow(null).optional(),
+    membershipDescription: Joi.string().allow(null).optional(),
   });
+  
   return schema.validate(user);
 }
 
-const createUser = async (
-  email: string,
-  password: string,
-  firstName: string,
-  lastName: string,
-  membershipType: string,
-  volunteeringInterest: boolean,
-  university: string | null,
-  studentIdURL: string | null,
-  phoneNumber: string | null,
-  dateOfBirth: Date | null,
-  profilePicture: string | null,
-  resume: string | null,
-  relevantDocuments: string[] | null,
-) => {
+const createUser = async (user: any) => {
   try {
+    const { email, password } = user;
     const hashedPassword = await encrypt(password);
 
-    const OTPGenerated = generateOTP(6)
-    const newUser = await User.create({
-      email,
-      password: hashedPassword,
-      firstName,
-      lastName,
-      membershipType,
-      volunteeringInterest,
-      university,
-      studentIdURL,
-      phoneNumber,
-      dateOfBirth,
-      profilePicture,
-      resume,
-      relevantDocuments,
-    });
-    
+    const OTPGenerated = generateOTP(6);
+    const newUser = await User.create({ ...user, password: hashedPassword });
+
     const otp = await OTP.create({
       email: email,
-      otpCode: OTPGenerated
-    })
+      otpCode: OTPGenerated,
+    });
 
-    
     const info = await sendMail({
       to: email,
       OTP: OTPGenerated,
-      type: 'OTP'
-    })
+      type: 'OTP',
+    });
 
     return _.pick(newUser, ['email', 'firstName', 'lastName']);
   } catch (error) {
@@ -152,14 +149,14 @@ export const verifyEmail = async (req: Request, res: Response) => {
   if (!checkUser) {
     return res.status(400).json({
       statusCode: 400,
-      message: 'Wrong verification code'
+      message: 'Wrong verification code',
     });
   }
 
   if (checkUser.isVerified) {
     return res.status(400).json({
       statusCode: 400,
-      message: 'User is already verified'
+      message: 'User is already verified',
     });
   }
 
@@ -168,32 +165,34 @@ export const verifyEmail = async (req: Request, res: Response) => {
   if (!user) {
     return res.status(400).json({
       statusCode: 400,
-      message: 'Wrong verification code'
+      message: 'Wrong verification code',
     });
   }
 
   return res.status(200).json({
     statusCode: 200,
-    message: 'Account successfully verified'
+    message: 'Account successfully verified',
   });
 };
 
-const validateUser = async (email: String, otp: String) => {
+const validateUser = async (email: string, otp: string) => {
   try {
-    const user = await User.findOne({ email })
+    const user = await User.findOne({ email });
     if (!user) {
-      return false
+      return false;
     }
-    const userOtp = await OTP.findOne({ email })
+    const userOtp = await OTP.findOne({ email });
     if (userOtp?.otpCode !== otp) {
-      return false
+      return false;
     }
 
-    const updatedUser = await User.findByIdAndUpdate(user._id, {
-      $set: { isVerified: true }
-    })
-    return updatedUser
+    const updatedUser = await User.findOneAndUpdate(
+      { email },
+      { $set: { isVerified: true } },
+      { new: true }
+    );
+    return updatedUser;
   } catch (error) {
-    return false
+    return false;
   }
-}
+};

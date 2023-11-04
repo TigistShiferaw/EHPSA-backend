@@ -1,5 +1,4 @@
 
-import { boolean } from 'joi';
 import mongoose, { Schema } from 'mongoose'
 
 export interface IUserInterface {
@@ -12,6 +11,9 @@ export interface IUserInterface {
     studentIdURL: String | null; // required if membership type is student
     university: string | null; // required if membership type is student
     membershipType: 'student' | 'associate' | 'professional' | null;
+    membershipStartDate:Date
+    membershipExpireDate:Date
+    membershipDescription:String
     volunteeringInterest: boolean;
     community: string | null;
     phone: string | null; // required if member or volunteer
@@ -64,9 +66,28 @@ const userSchema: Schema<IUserInterface> = new mongoose.Schema({
         type: String,
         enum: ['student', 'associate', 'professional'],
     },
-
+    membershipDescription:{
+        type:String,
+        required:false
+    },
+    membershipExpireDate: {
+        type: Date,
+        required: false,
+        default: function() {
+            const currentDate = new Date();
+            currentDate.setMonth(currentDate.getMonth() + 3);
+            return currentDate;
+        }
+    },    
+    membershipStartDate:{
+        type:Date,
+        required:false,
+        default:Date.now()
+    },
     volunteeringInterest: {
         type: Boolean,
+        required:false,
+        default:false
     },
 
     community: {
