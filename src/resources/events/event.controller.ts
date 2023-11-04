@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import Event from '../events/event.model';
+import User from '../user/user.model';
 
 export const createEvent = async (req: Request, res: Response) => {
   try {
@@ -59,5 +60,32 @@ export const deleteEvent = async (req: Request, res: Response) => {
     res.status(204).json();
   } catch (error) {
     res.status(500).json({ error: 'Could not delete event' });
+  }
+};
+
+
+export const registerForEvent = async (req: Request, res: Response) => {
+  try {
+    const { eventId, userId } = req.body;
+
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    event.registeredUsers.push(userId);
+    user.registeredEvent = eventId;
+
+    await event.save();
+    await user.save();
+
+    res.status(200).json({ message: 'Registration successful' });
+  } catch (error) {
+    res.status(500).json({ error: 'Could not register for the event' });
   }
 };

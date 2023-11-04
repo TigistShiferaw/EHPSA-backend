@@ -6,6 +6,7 @@ export interface IEvent extends Document {
   image: string;
   location: string;
   time: Date;
+  registeredUsers: mongoose.Types.ObjectId[];
 }
 
 const eventSchema: Schema = new Schema<IEvent>({
@@ -29,6 +30,12 @@ const eventSchema: Schema = new Schema<IEvent>({
     type: Date,
     required: true,
   },
+  registeredUsers: [
+    {
+      type: mongoose.Types.ObjectId,
+      ref: 'User',
+    },
+  ],
 });
 
 export default mongoose.model<IEvent>('Event', eventSchema);
