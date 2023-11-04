@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import Event from '../events/event.model';
-import User from '../user/user.model';
+import {User} from '../user/user.model';
 
 export const createEvent = async (req: Request, res: Response) => {
   try {

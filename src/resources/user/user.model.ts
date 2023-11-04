@@ -90,4 +90,4 @@ const userSchema: Schema<IUserInterface> = new mongoose.Schema({
     },
 });
 
-export default mongoose.model<IUserInterface>("User", userSchema);
+export const User = mongoose.model<IUserInterface>("User", userSchema);
