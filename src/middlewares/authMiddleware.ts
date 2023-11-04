@@ -7,7 +7,6 @@ interface TokenPayload extends JwtPayload {
 
 export const authenticate = (req: Request, res: Response, next: NextFunction): void => {
     const authHeader = req.headers.authorization;
-    console.log('authHeader', authHeader);
     if (!authHeader) {
         res.status(401).send({ message: 'Unauthorized' });
         return;
