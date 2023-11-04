@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { User, IUserInterface } from '../../resources/user/user.model';
 import { encrypt } from '../../helpers/encryptPassword';
 import _ from 'lodash';
-import { Types } from 'mongoose';
+import cloudinary from "../../config/cloudinary";
 
 interface RequestWithUser extends Request {
   user: IUserInterface;
@@ -68,14 +68,24 @@ export class UserController {
   public async updateUser(req: RequestWithUser, res: Response): Promise<Response<any>> {
     try {
         const id = req.params.id;
-        
         const user = await User.findById(id);
 
         if (!user) {
             return res.status(404).json('User not found');
         }
 
-        const updatedUser = await User.findByIdAndUpdate(id, req.body, { new: true });
+        if (req.file) {
+            const cloudinaryImage = await cloudinary.uploader.upload(req.file.path, {
+                folder: '/EHPSA/Images',
+                use_filename: true,
+            });
+            user.profilePicture = cloudinaryImage?.secure_url;
+        }
+        for (const key in req.body) {
+          (user as any)[key] = req.body[key];
+        }
+
+        const updatedUser = await user.save();
 
         if (!updatedUser) {
             return res.status(404).json('User not found after update');
@@ -83,11 +93,10 @@ export class UserController {
 
         return res.status(200).json(updatedUser);
     } catch (error) {
-        console.error(error); 
+        console.error(error);
         return res.status(500).json('Something went wrong');
     }
 }
-
   public async deleteUser(req: RequestWithUser, res: Response): Promise<Response<any>> {
     try {
       const { id } = req.params;
